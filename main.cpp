@@ -24,7 +24,7 @@ int main() {
     std::string arduino_port_name;
     auto ports = serial::list_ports();
     for (auto port : ports) { // automaticaly selects the port with arduino
-        serial::Serial test_port(port.port, 9600, serial::Timeout::simpleTimeout(250));
+        serial::Serial test_port(port.port, 57600, serial::Timeout::simpleTimeout(250));
         uint8_t send_buffer{ 6 };
         test_port.write(&send_buffer, 1);
         uint8_t receive_buffer{};
@@ -38,8 +38,7 @@ int main() {
         std::cerr << "Failed to connect to arduino";
         return -1;
     }
-    serial::Serial arduino_serial(arduino_port_name, 9600, serial::Timeout::simpleTimeout(250));
-    
+    serial::Serial arduino_serial(arduino_port_name, 57600, serial::Timeout::simpleTimeout(250));
 
     while (cap.read(frame)) {
         uint64_t previous_time{get_milliseconds()};
@@ -54,19 +53,21 @@ int main() {
         int row_ofset{0};
         int column_ofset{0};
 
-        for (int i = 0; i < 2; i++) {
+        for (int k = 0; k < 2; k++) { // sends the video frame data to arduino
             for (int j = 0; j < 4; j++) {
                 for (int row = 0; row < 8; row++) {
 
                     for (int i = 0; i < 5; i++) {
                         send_buffer <<= 1;
-                        send_buffer |= (frame.at<uint8_t>(row + row_ofset, i + column_ofset) > 0);
+                        send_buffer |= (frame.at<uint8_t>(row + column_ofset, i + row_ofset) > 0);
                     }
                     arduino_serial.write(&send_buffer, 1);
+                    send_buffer = 0;
                 }
-                row_ofset += 5;
+                row_ofset += 6;
             }
             column_ofset += 8;
+            row_ofset = 0;
         }
 
         uint64_t current_time{};
