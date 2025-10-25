@@ -5,6 +5,11 @@
 #include <Windows.h>
 #include <chrono>
 
+uint64_t get_milliseconds() {
+    using namespace std::chrono;
+    return duration_cast<milliseconds>(steady_clock::now().time_since_epoch()).count();
+}
+
 int main() {
 
     
@@ -27,6 +32,7 @@ int main() {
         if (receive_buffer == 7) {
             arduino_port_name = port.port;
         }
+        test_port.close();
     }
     if (arduino_port_name.empty()) {
         std::cerr << "Failed to connect to arduino";
@@ -36,6 +42,8 @@ int main() {
     
 
     while (cap.read(frame)) {
+        uint64_t previous_time{get_milliseconds()};
+
         cv::resize(frame, frame, cv::Size(23, 17), cv::INTER_NEAREST);
         cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
         cv::threshold(frame, frame, 127, 255, cv::THRESH_BINARY);
@@ -43,21 +51,30 @@ int main() {
         cv::imshow("Video", resized);
 
         uint8_t send_buffer{};
+        int row_ofset{0};
+        int column_ofset{0};
 
-        for (int i = 0; i < 5; i++) {
-            send_buffer <<= 1;
-            send_buffer |= (frame.at<uint8_t>(0, i) > 0); // takes pixel. if >0 then black cuz its usualy 255
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j < 4; j++) {
+                for (int row = 0; row < 8; row++) {
+
+                    for (int i = 0; i < 5; i++) {
+                        send_buffer <<= 1;
+                        send_buffer |= (frame.at<uint8_t>(row + row_ofset, i + column_ofset) > 0);
+                    }
+                    arduino_serial.write(&send_buffer, 1);
+                }
+                row_ofset += 5;
+            }
+            column_ofset += 8;
         }
 
-        arduino_serial.write(&send_buffer, 1);
+        uint64_t current_time{};
+        double frame_time{1000.0 / 30.0};
+        current_time = get_milliseconds();
 
-        for (;;) {
-            int input = cv::waitKey(0) & 0xff;
-            if (input == 27) return 0;
-            if (input == 'q' || input == 'Q') break;
-            break;
-        }
+        auto sleep_time = std::chrono::milliseconds(static_cast<long long>(frame_time - (current_time - previous_time)));
+        std::this_thread::sleep_for(sleep_time);
     }
-
     arduino_serial.close();
 }
