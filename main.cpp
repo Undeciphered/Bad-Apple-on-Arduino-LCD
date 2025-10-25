@@ -7,36 +7,20 @@
 
 int main() {
 
-    /*
-    cv::VideoCapture cap("C:\\Bad Apple.mp4");
-    if (!cap.isOpened()) return -1;
-
-    cv::Mat frame, gray, resized, binary, output;
     
-    while (cap.read(frame)) {
-        cv::resize(frame, resized, cv::Size(23, 17), cv::INTER_NEAREST);
-        cv::threshold(resized, binary, 127, 255, cv::THRESH_BINARY);
-        cv::resize(binary, output, cv::Size(230, 170));
-        cv::imshow("Video", output);
-
-        bool pixel = output.at<char>(0, 0);
-        cv::imshow("Image", cv::Mat(cv::Size(230, 170), CV_8UC1, pixel ? 255 : 0));
-   
-        for (;;) {
-           int input = cv::waitKey(0) & 0xff;
-           if (input == 27) return 0;
-           if (input == 'q' || input == 'Q') break;
-           break;
-        }
+    cv::VideoCapture cap("C:\\Bad Apple.mp4");
+    if (!cap.isOpened()) {
+        std::cerr << "Failed to load video";
+        return -1;
     }
-    */
-     
+
+    cv::Mat frame, resized;
 
     std::string arduino_port_name;
     auto ports = serial::list_ports();
     for (auto port : ports) { // automaticaly selects the port with arduino
         serial::Serial test_port(port.port, 9600, serial::Timeout::simpleTimeout(250));
-        uint8_t send_buffer{6};
+        uint8_t send_buffer{ 6 };
         test_port.write(&send_buffer, 1);
         uint8_t receive_buffer{};
         test_port.read(&receive_buffer, 1);
@@ -44,18 +28,36 @@ int main() {
             arduino_port_name = port.port;
         }
     }
-
-    if (arduino_port_name.empty()) return -1;
+    if (arduino_port_name.empty()) {
+        std::cerr << "Failed to connect to arduino";
+        return -1;
+    }
     serial::Serial arduino_serial(arduino_port_name, 9600, serial::Timeout::simpleTimeout(250));
+    
 
-    std::string send_buffer;
-    std::string receive_buffer;
-    std::cout << ">> Enter a message: \n";
-    std::getline(std::cin, send_buffer);
-    arduino_serial.write(send_buffer + '\n');
-    receive_buffer = arduino_serial.readline(65536, "\n");
-    std::cout << "\n>> Received message: (length: " << receive_buffer.length() << ")\n";
-    std::cout << receive_buffer << '\n';
-        
+    while (cap.read(frame)) {
+        cv::resize(frame, frame, cv::Size(23, 17), cv::INTER_NEAREST);
+        cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
+        cv::threshold(frame, frame, 127, 255, cv::THRESH_BINARY);
+        cv::resize(frame, resized, cv::Size(230, 170));
+        cv::imshow("Video", resized);
+
+        uint8_t send_buffer{};
+
+        for (int i = 0; i < 5; i++) {
+            send_buffer <<= 1;
+            send_buffer |= (frame.at<uint8_t>(0, i) > 0); // takes pixel. if >0 then black cuz its usualy 255
+        }
+
+        arduino_serial.write(&send_buffer, 1);
+
+        for (;;) {
+            int input = cv::waitKey(0) & 0xff;
+            if (input == 27) return 0;
+            if (input == 'q' || input == 'Q') break;
+            break;
+        }
+    }
+
     arduino_serial.close();
 }
