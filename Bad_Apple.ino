@@ -3,7 +3,7 @@ LiquidCrystal lcd(13, 12, 11, 10, 9, 8);
 
 void setup() {
 
-  Serial.begin(9600);
+  Serial.begin(57600);
   lcd.begin(16, 2);
   lcd.clear();
   while (Serial.available() == 0);
@@ -31,12 +31,11 @@ void loop() {
     lcd.createChar(segment, screen_segment_buffer);
   }
 
+  lcd.clear();
   for (int row = 0; row <= 1; row++) {
     lcd.setCursor(0, row);
     for(int i = 0; i < 4; i++) {
       lcd.write(byte(i + row * 4));
     }
   }
-
-  lcd.clear();
 }
