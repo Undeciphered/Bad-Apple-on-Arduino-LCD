@@ -6,10 +6,6 @@ void setup() {
   Serial.begin(9600);
   lcd.begin(16, 2);
   lcd.clear();
-}
-
-void loop() {
-
   while (Serial.available() == 0);
   int handshake_receive_buffer = Serial.read();
   if(handshake_receive_buffer == 6) {
@@ -18,10 +14,15 @@ void loop() {
   } else {
     return;
   }
+}
 
+uint8_t receive_buffer
+
+void loop() {
+  
   while (Serial.available() == 0);
-  String receive_buffer = Serial.readStringUntil('\n');
+  receive_buffer = Serial.read();
   lcd.setCursor(0, 0);
   lcd.print(receive_buffer);
-  Serial.println("Hello World!");
-  }
+  lcd.print("     ");
+}
