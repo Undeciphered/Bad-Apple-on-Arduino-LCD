@@ -2,8 +2,8 @@
 #include <string>
 #include <serial/serial.h>
 #include <opencv2/opencv.hpp>
-#include <Windows.h>
 #include <chrono>
+#include <thread>
 
 uint64_t get_milliseconds() {
     using namespace std::chrono;
@@ -12,8 +12,7 @@ uint64_t get_milliseconds() {
 
 int main() {
 
-    
-    cv::VideoCapture cap("C:\\Bad Apple.mp4");
+    cv::VideoCapture cap("C:\\Bad Apple_25fps_interp.mp4");
     if (!cap.isOpened()) {
         std::cerr << "Failed to load video";
         return -1;
@@ -69,7 +68,7 @@ int main() {
         }
 
         uint64_t current_time{};
-        double frame_time{1000.0 / 30.0};
+        double frame_time{1000.0 / 25.0};
         current_time = get_milliseconds();
 
         auto sleep_time = std::chrono::milliseconds(static_cast<long long>(frame_time - (current_time - previous_time)));
