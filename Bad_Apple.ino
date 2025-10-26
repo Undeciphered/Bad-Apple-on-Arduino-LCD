@@ -12,6 +12,8 @@ void setup() {
 
   Serial.begin(57600);
   lcd.begin(16, 2);
+  byte empty[8] = {0};
+  for (int i = 0; i < 8; i++) lcd.createChar(i, empty);
   lcd.clear();
   while (Serial.available() == 0);
   int handshake_receive_buffer = Serial.read();
@@ -24,9 +26,11 @@ void setup() {
 }
 
 uint8_t screen_segment_buffer[8];
-uint8_t buffer[64];
-uint8_t byte_count{ 0 };
-unsigned long since_last_data{0};
+uint8_t old_segment_buffer[8];
+uint8_t buffer[64] = {0};
+uint8_t old_buffer[64] = {0};
+uint8_t byte_count{0};
+uint32_t since_last_data{0};
 
 void loop() {
 
@@ -40,14 +44,18 @@ void loop() {
     for (int segment = 0; segment < 8; segment++) {
       for (int line = 0; line < 8; line++) {
         screen_segment_buffer[line] = buffer[8 * segment + line];
+        old_segment_buffer[line] = old_buffer[8 * segment + line];
       }
-      lcd.createChar(segment, screen_segment_buffer);
+      if(memcmp(old_segment_buffer, screen_segment_buffer, 8) != 0) {
+        lcd.createChar(segment, screen_segment_buffer);
+      }
     }
     lcd.setCursor(0, 0);
     for (int i = 0; i < 4; i++) lcd.write(byte(i));
     lcd.setCursor(0, 1);
     for (int i = 0; i < 4; i++) lcd.write(byte(i+4));
     byte_count = 0;
+    memcpy(old_buffer, buffer, sizeof(buffer));
   }
 
   if (millis() - since_last_data >= 1000 && since_last_data != 0) reset();
