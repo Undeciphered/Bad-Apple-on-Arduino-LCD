@@ -46,8 +46,6 @@ int main() {
         cv::resize(frame, frame, cv::Size(23, 17), cv::INTER_NEAREST);
         cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
         cv::threshold(frame, frame, 127, 255, cv::THRESH_BINARY);
-        cv::resize(frame, resized, cv::Size(230, 170));
-        cv::imshow("Video", resized);
 
         uint8_t send_buffer{};
         int row_ofset{0};
