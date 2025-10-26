@@ -24,7 +24,13 @@ void loop() {
   for (int segment = 0; segment < 8; segment++) {
     for (int line = 0; line < 8; line++) {
 
-      while (Serial.available() == 0);
+      auto since_last_data = millis();
+      while (Serial.available() == 0) {
+        if (millis() - since_last_data >= 1000) {
+          lcd.clear();
+          return;
+        }
+      };
       receive_buffer = Serial.read();
       screen_segment_buffer[line] = receive_buffer;
     }
