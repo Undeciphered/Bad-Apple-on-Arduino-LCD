@@ -1,5 +1,12 @@
 #include <LiquidCrystal.h>
+#include <avr/wdt.h>
 LiquidCrystal lcd(13, 12, 11, 10, 9, 8);
+
+void reset() {
+  
+  wdt_enable(WDTO_15MS);
+  for (;;);
+}
 
 void setup() {
 
@@ -12,7 +19,7 @@ void setup() {
     uint8_t handshake_send_buffer{7};
     Serial.write(handshake_send_buffer);
   } else {
-    return;
+    reset();
   }
 }
 
@@ -28,7 +35,7 @@ void loop() {
       while (Serial.available() == 0) {
         if (millis() - since_last_data >= 1000) {
           lcd.clear();
-          return;
+          reset();
         }
       };
       receive_buffer = Serial.read();
@@ -36,7 +43,7 @@ void loop() {
     }
     lcd.createChar(segment, screen_segment_buffer);
   }
-
+  
   lcd.clear();
   for (int row = 0; row <= 1; row++) {
     lcd.setCursor(0, row);
