@@ -43,13 +43,10 @@ void loop() {
       }
       lcd.createChar(segment, screen_segment_buffer);
     }
-
-    for (int row = 0; row <= 1; row++) {
-      lcd.setCursor(0, row);
-      for (int i = 0; i < 4; i++) {
-        lcd.write(byte(i + row * 4));
-      }
-    }
+    lcd.setCursor(0, 0);
+    for (int i = 0; i < 4; i++) lcd.write(byte(i));
+    lcd.setCursor(0, 1);
+    for (int i = 0; i < 4; i++) lcd.write(byte(i+4));
     byte_count = 0;
   }
 
