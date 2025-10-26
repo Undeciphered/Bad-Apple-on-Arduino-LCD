@@ -12,7 +12,7 @@ uint64_t get_milliseconds() {
 
 int main() {
 
-    cv::VideoCapture cap("C:\\Bad Apple_25fps_interp.mp4");
+    cv::VideoCapture cap("C:\\Bad Apple_25fps_blend.mp4");
     if (!cap.isOpened()) {
         std::cerr << "Failed to load video";
         return -1;
